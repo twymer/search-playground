@@ -56,7 +56,10 @@ class Search:
       return path
 
     def has_node_with_position(node_list, position):
-      return any(position == node.position for node in node_list)
+      for node in node_list:
+        if position == node.position:
+          return True
+      return False
 
     open_set = set()
     closed_set = set()
@@ -96,7 +99,9 @@ class Search:
     return None
 
 e = Environment()
-e.load_map("little_maze.txt")
 
 s = Search()
-print(s.find_path((0,5), (0,7), e))
+# e.load_map("little_maze.txt")
+# print(s.find_path((20, 21), (6, 21), e))
+e.load_map("big_maze.txt")
+print(s.find_path((2, 2), (47, 81), e))
