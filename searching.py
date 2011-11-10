@@ -57,9 +57,6 @@ class Search:
       # self.tracing_time += time() - t
       return path
 
-    def has_node_with_position(node_list, position):
-      return position in node_list
-
     open_nodes = {}
     closed_nodes = {}
 
@@ -76,8 +73,8 @@ class Search:
       closed_nodes[current.position] = current
       for neighbor in neighbors(current.position):
         if (environment.passable(neighbor) and # Add if passable..
-            not has_node_with_position(open_nodes, neighbor) and # and not open
-            not has_node_with_position(closed_nodes, neighbor) and # or closed
+            neighbor not in open_nodes and # and not open
+            neighbor not in closed_nodes and # or closed
             (current.depth > 1 or environment.unoccupied(neighbor))): # if occupied and next to start
           new_g = current.g + 1
           new_h = manhattan_distance(neighbor, goal_position)
