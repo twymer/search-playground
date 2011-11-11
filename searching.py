@@ -48,11 +48,6 @@ class Search:
       d = 1 # movement cost
       return d * (abs(start[0] - goal[0]) + abs(start[1] - goal[1]))
 
-    #def neighbors(pos):
-    #  directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    #  return [((pos[0] + d_row) % environment.rows(), (pos[1] + d_col) % environment.cols())
-    #      for (d_row, d_col) in directions]
-
     def trace_path(final_node):
       t = time()
       path = []
@@ -86,7 +81,7 @@ class Search:
         if (environment.passable(neighbor) and # Add if passable..
             neighbor not in open_nodes and # and not open
             neighbor not in closed_nodes and # or closed
-            (current.depth > 1 or environment.unoccupied(neighbor))): # if occupied and next to start
+            (current.depth > 0 or environment.unoccupied(neighbor))): # if occupied and next to start
           new_g = current.g + 1
           new_h = manhattan_distance(neighbor, goal_position)
           new = Node(
