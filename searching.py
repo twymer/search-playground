@@ -36,17 +36,28 @@ class Environment:
   
 
 class Search:
+  def __init__(self, env):
+    self.environment = env
+
+  def manhattan_distance(self, start, goal):
+    #TODO: move these out
+      N = self.environment.rows()
+      M = self.environment.cols()
+      s0 = start[0]
+      g0 = goal[0]
+      if s0 > g0:
+        g0, s0 = s0, g0
+      s1 = start[1]
+      g1 = goal[1]
+      if s1 > g1:
+        g1, s1 = s1, g1
+      return min((g0 - s0, s0 + N - g0)) + min((g1 - s1, s1 + M - g1))
+
   def find_path(self, start_position, goal_position, environment):
     if not environment.passable(goal_position):
         return False
     Node = namedtuple('Node', 'position f g h parent depth')
     #logging.error("find_path")
-
-    # TODO: This doesn't consider map wrap around
-    # Source: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
-    def manhattan_distance(start, goal):
-      d = 1 # movement cost
-      return d * (abs(start[0] - goal[0]) + abs(start[1] - goal[1]))
 
     def trace_path(final_node):
       t = time()
@@ -64,7 +75,7 @@ class Search:
     closed_nodes = {}
     open_heap = []
 
-    start_h = manhattan_distance(start_position, goal_position)
+    start_h = self.manhattan_distance(start_position, goal_position)
     current = Node(start_position, start_h, 0, start_h, None, 0)
     open_nodes[current.position] = current
     heapq.heappush(open_nodes_heap, (current.f, current))
@@ -78,12 +89,12 @@ class Search:
         return trace_path(current)
       closed_nodes[current.position] = current
       for neighbor in environment.neighbors[current.position]:
-        if (environment.passable(neighbor) and # Add if passable..
-            neighbor not in open_nodes and # and not open
+        if (neighbor not in open_nodes and # and not open
             neighbor not in closed_nodes and # or closed
-            (current.depth > 0 or environment.unoccupied(neighbor))): # if occupied and next to start
+            (current.depth > 0 or environment.unoccupied(neighbor)) and # if occupied and next to start
+            environment.passable(neighbor)): # if occupied and next to start
           new_g = current.g + 1
-          new_h = manhattan_distance(neighbor, goal_position)
+          new_h = self.manhattan_distance(neighbor, goal_position)
           new = Node(
             neighbor,
             new_g,
@@ -101,16 +112,17 @@ class Search:
     # did not find our goal
     return None
 
-e = Environment()
+if __name__ == '__main__':
+  e = Environment()
 
-s = Search()
-# e.load_map("little_maze.txt")
-# print(s.find_path((20, 21), (6, 21), e))
-e.load_map("big_maze.txt")
-# for i in range(e.cols()):
-#   for j in range(e.rows()):
+  # e.load_map("little_maze.txt")
+  # print(s.find_path((20, 21), (6, 21), e))
+  e.load_map("big_maze.txt")
+  s = Search(e)
+  # for i in range(e.cols()):
+  #   for j in range(e.rows()):
 
-for i in range(20):
-  for j in range(20):
-    s.find_path((2,2), (i,j), e)
-# print(s.find_path((2, 2), (47, 81), e))
+  for i in range(20):
+    for j in range(20):
+      s.find_path((2,2), (i,j), e)
+  # print(s.find_path((2, 2), (47, 81), e))
