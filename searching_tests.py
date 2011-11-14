@@ -27,7 +27,9 @@ class TestManhattan(unittest.TestCase):
     self.assertEqual(self.search.manhattan_distance((0,0), (self.e.rows() - 1, self.e.cols() - 1)), 2 * self.d)
 
   def test_edge_to_center(self):
-    self.assertEqual(self.search.manhattan_distance((0,22), (4,1)), 25 * self.d)
+    self.assertEqual(self.search.manhattan_distance((22,0), (4,1)), 19 * self.d)
+    self.assertEqual(self.search.manhattan_distance((0,112), (4,1)), 6 * self.d)
+    self.assertEqual(self.search.manhattan_distance((111,112), (4,1)), 7 * self.d)
 
   def middle_tests(self):
     self.assertEqual(self.search.manhattan_distance((49,0), (51,0)), 2 * self.d)

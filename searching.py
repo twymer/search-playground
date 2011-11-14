@@ -23,9 +23,11 @@ class Environment:
     return self.grid[position[0]][position[1]] != "%"
 
   def load_map(self, file_name):
+    self.grid = []
     f = open(file_name, 'r')
     for line in f:
       self.grid.append(list(line))
+    f.close()
 
     directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
     for r in range(self.rows()):
@@ -33,28 +35,33 @@ class Environment:
         self.neighbors[(r,c)] = [((r + d_row) % self.rows(), (c + d_col) % self.cols())
           for (d_row, d_col) in directions]
 
-  
-
 class Search:
   def __init__(self, env):
     self.environment = env
+    self.N = self.environment.rows()
+    self.M = self.environment.cols()
 
   def manhattan_distance(self, start, goal):
-    #TODO: move these out
-      N = self.environment.rows()
-      M = self.environment.cols()
-      s0 = start[0]
-      g0 = goal[0]
-      if s0 > g0:
-        g0, s0 = s0, g0
-      s1 = start[1]
-      g1 = goal[1]
-      if s1 > g1:
-        g1, s1 = s1, g1
-      return min((g0 - s0, s0 + N - g0)) + min((g1 - s1, s1 + M - g1))
+    s0 = start[0]
+    g0 = goal[0]
+    # TODO: Remove this before end of contest
+    if s0 >= self.N or g0 >= self.N:
+      raise ValueError("Row value out of bounds")
+    if s0 > g0:
+      g0, s0 = s0, g0
 
-  def find_path(self, start_position, goal_position, environment):
-    if not environment.passable(goal_position):
+    s1 = start[1]
+    g1 = goal[1]
+    # TODO: Remove this before end of contest
+    if s1 >= self.M or g1 >= self.M:
+      raise ValueError("Column value out of bounds")
+    if s1 > g1:
+      g1, s1 = s1, g1
+
+    return min((g0 - s0, s0 + self.N - g0)) + min((g1 - s1, s1 + self.M - g1))
+
+  def find_path(self, start_position, goal_position):
+    if not self.environment.passable(goal_position):
         return False
     Node = namedtuple('Node', 'position f g h parent depth')
     #logging.error("find_path")
@@ -88,11 +95,11 @@ class Search:
         # logging.error("steps to find path: " + str(current.depth))
         return trace_path(current)
       closed_nodes[current.position] = current
-      for neighbor in environment.neighbors[current.position]:
+      for neighbor in self.environment.neighbors[current.position]:
         if (neighbor not in open_nodes and # and not open
             neighbor not in closed_nodes and # or closed
-            (current.depth > 0 or environment.unoccupied(neighbor)) and # if occupied and next to start
-            environment.passable(neighbor)): # if occupied and next to start
+            (current.depth > 0 or self.environment.unoccupied(neighbor)) and # if occupied and next to start
+            self.environment.passable(neighbor)): # if occupied and next to start
           new_g = current.g + 1
           new_h = self.manhattan_distance(neighbor, goal_position)
           new = Node(
@@ -124,5 +131,5 @@ if __name__ == '__main__':
 
   for i in range(20):
     for j in range(20):
-      s.find_path((2,2), (i,j), e)
+      s.find_path((2,2), (i,j))
   # print(s.find_path((2, 2), (47, 81), e))
