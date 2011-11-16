@@ -7,12 +7,8 @@ class Environment:
   def __init__(self):
     self.grid = []
     self.neighbors = {}
-
-  def rows(self):
-    return len(self.grid)
-
-  def cols(self):
-    return len(self.grid[0])
+    self.rows = 0
+    self.cols = 0
 
   # Used in ants library to check if there is an ant already there
   def unoccupied(self, position):
@@ -26,25 +22,39 @@ class Environment:
     self.grid = []
     f = open(file_name, 'r')
     for line in f:
-      self.grid.append(list(line))
+      self.grid.append(list(line.strip()))
     f.close()
 
+    self.rows = len(self.grid)
+    self.cols = len(self.grid[0])
+
     directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    for r in range(self.rows()):
-      for c in range(self.cols()):
-        self.neighbors[(r,c)] = [((r + d_row) % self.rows(), (c + d_col) % self.cols())
+    for r in range(self.rows):
+      for c in range(self.cols):
+        self.neighbors[(r,c)] = [((r + d_row) % self.rows, (c + d_col) % self.cols)
           for (d_row, d_col) in directions]
 
+  def visualize_path(self, path):
+    # Copy each line individually so we don't screw up grid
+    g = [list(line) for line in self.grid]
+    for loc in path:
+      g[loc[0]][loc[1]] = 'x'
+    for row in g:
+      print(*row, sep='')
+
+# version 0.1.1
 class Search:
   def __init__(self, env):
     self.environment = env
-    self.N = self.environment.rows()
-    self.M = self.environment.cols()
+    self.N = self.environment.rows
+    self.M = self.environment.cols
 
   def manhattan_distance(self, start, goal):
+    d = 1
     s0 = start[0]
     g0 = goal[0]
     # TODO: Remove this before end of contest
+    # Or investigate using an assert and python -O on server to stop the check
     if s0 >= self.N or g0 >= self.N:
       raise ValueError("Row value out of bounds")
     if s0 > g0:
@@ -58,11 +68,12 @@ class Search:
     if s1 > g1:
       g1, s1 = s1, g1
 
-    return min((g0 - s0, s0 + self.N - g0)) + min((g1 - s1, s1 + self.M - g1))
+    return d * (min((g0 - s0, s0 + self.N - g0)) + min((g1 - s1, s1 + self.M - g1)))
 
-  def find_path(self, start_position, goal_position):
-    if not self.environment.passable(goal_position):
-        return False
+  def find_path(self, start_position, goal_position, next_turn_list = []):
+    if (not self.environment.passable(goal_position) or
+        not self.environment.passable(goal_position)):
+      return False
     Node = namedtuple('Node', 'position f g h parent depth')
     #logging.error("find_path")
 
@@ -92,13 +103,13 @@ class Search:
       del open_nodes[current.position]
       #current = min(open_nodes.values(), key=lambda x:x.f)
       if current.position == goal_position:
-        # logging.error("steps to find path: " + str(current.depth))
+        logging.error("steps to find path: " + str(current.depth))
         return trace_path(current)
       closed_nodes[current.position] = current
       for neighbor in self.environment.neighbors[current.position]:
         if (neighbor not in open_nodes and # and not open
             neighbor not in closed_nodes and # or closed
-            (current.depth > 0 or self.environment.unoccupied(neighbor)) and # if occupied and next to start
+            (current.depth > 0 or neighbor not in next_turn_list) and # if occupied and next to start
             self.environment.passable(neighbor)): # if occupied and next to start
           new_g = current.g + 1
           new_h = self.manhattan_distance(neighbor, goal_position)
