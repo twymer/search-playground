@@ -6,7 +6,7 @@ class TestManhattan(unittest.TestCase):
     self.e = searching.Environment()
     self.e.load_map("big_maze.txt")
     self.search = searching.Search(self.e)
-    self.d = 4
+    self.d = 1
 
   def test_neighbors(self):
     self.assertEqual(self.search.manhattan_distance((0,0), (0,1)), 1 * self.d)
@@ -28,8 +28,8 @@ class TestManhattan(unittest.TestCase):
 
   def test_edge_to_center(self):
     self.assertEqual(self.search.manhattan_distance((22,0), (4,1)), 19 * self.d)
-    self.assertEqual(self.search.manhattan_distance((0,112), (4,1)), 6 * self.d)
-    self.assertEqual(self.search.manhattan_distance((111,112), (4,1)), 7 * self.d)
+    self.assertEqual(self.search.manhattan_distance((0,111), (4,1)), 6 * self.d)
+    self.assertEqual(self.search.manhattan_distance((111,111), (4,1)), 7 * self.d)
 
   def middle_tests(self):
     self.assertEqual(self.search.manhattan_distance((49,0), (51,0)), 2 * self.d)
@@ -52,9 +52,13 @@ class TestFindPath(unittest.TestCase):
   def test_neighbors(self):
     self.assertEqual(len(self.search.find_path((10,10), (11,10))), 1)
 
-  def test_around_things(self):
+  def test_further_apart(self):
     path = self.search.find_path((19,8), (19,19))
-    self.assertEqual(len(path), 14)
+    self.assertEqual(len(path), 11)
+
+  def test_around_things(self):
+    path = self.search.find_path((9,19), (14,19))
+    self.assertEqual(len(path), 13)
 
 if __name__ == '__main__':
   unittest.main()

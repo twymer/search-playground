@@ -34,7 +34,7 @@ class Environment:
         self.neighbors[(r,c)] = [((r + d_row) % self.rows, (c + d_col) % self.cols)
           for (d_row, d_col) in directions]
 
-# version 0.1.1
+# version 0.1.2
 class Search:
   def __init__(self, env):
     self.environment = env

@@ -10,5 +10,12 @@ end = (int(random() * e.rows), int(random() * e.cols))
 start = (13, 7)
 end = (9, 23)
 
+# This set demonstrates that start gets explored after we open
+# the first real node
+# Also that the end node never technically gets expanded which means our
+# path distance is one off from correct
+start = (9, 19)
+end = (14, 19)
+
 s.visualize_path(start, end)
 print(start, end)
