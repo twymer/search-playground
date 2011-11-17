@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 import searching
 from random import random
 
@@ -17,5 +18,8 @@ end = (9, 23)
 start = (9, 19)
 end = (14, 19)
 
-s.visualize_path(start, end)
+# s.visualize_path(start, end)
+def goal_method(node):
+  return node == (14, 19)
+s.visualize_bfs(start, goal_method)
 print(start, end)

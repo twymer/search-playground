@@ -2,6 +2,7 @@ from collections import namedtuple
 from time import time
 import logging
 import heapq
+from queue import Queue
 
 class Environment:
   def __init__(self):
@@ -34,7 +35,7 @@ class Environment:
         self.neighbors[(r,c)] = [((r + d_row) % self.rows, (c + d_col) % self.cols)
           for (d_row, d_col) in directions]
 
-# version 0.1.2
+# version 0.2.0
 class Search:
   def __init__(self, env):
     self.environment = env
@@ -62,10 +63,7 @@ class Search:
 
     return d * (min((g0 - s0, s0 + self.N - g0)) + min((g1 - s1, s1 + self.M - g1)))
 
-  def visualize_path(self, start, goal):
-    path, open_list, closed_list = self.path_data(start, goal)
-    if not path:
-      return
+  def print_grid(self, path, closed_list = [], open_list = []):
     # Copy each line individually so we don't screw up grid
     g = [list(line) for line in self.environment.grid]
     for loc in open_list:
@@ -77,6 +75,18 @@ class Search:
     for row in g:
       print(*row, sep='')
 
+  def visualize_path(self, start, goal):
+    path, open_list, closed_list = self.path_data(start, goal)
+    if not path:
+      return
+    self.print_grid(path, open_list, closed_list)
+
+  def visualize_bfs(self, start, goal_function):
+    path, open_list, closed_list = self.bfs_path(start, goal_function)
+    if not path:
+      return
+    self.print_grid(path, open_list, closed_list)
+
   def find_path(self, start_position, goal_position, next_turn_list = []):
     path, _, _ = self.calc_path(start_position, goal_position, next_turn_list)
     return path
@@ -84,28 +94,62 @@ class Search:
   def path_data(self, start_position, goal_position):
     return self.calc_path(start_position, goal_position, [])
 
+  def bfs_path(self, start_position, goal_function, next_turn_list = [], target_list = []):
+    if (not self.environment.passable(start_position)):
+      return None#, None, None
+    Node = namedtuple('Node', 'position parent depth')
+
+    def trace_path(final_node, open_nodes, closed_nodes):
+      path = []
+      current = final_node
+      while current.parent:
+        path.append(current.position)
+        current = current.parent
+
+      return path, open_nodes, closed_nodes
+
+    open_queue = Queue()
+    #TODO: these could probably just be sets this time around
+    open_nodes = {}
+    closed_nodes = {}
+    current = Node(start_position, None, 0)
+    open_queue.put(current)
+    open_nodes[current.position] = current
+    while open_queue:
+      current = open_queue.get()
+      del open_nodes[current.position]
+      closed_nodes[current.position] = (current)
+      if goal_function(current.position):
+        return trace_path(current, open_nodes, closed_nodes)
+      for neighbor in self.environment.neighbors[current.position]:
+        if (neighbor not in open_nodes and
+            neighbor not in closed_nodes and
+            (current.depth > 0 or neighbor not in next_turn_list) and
+            self.environment.passable(neighbor)):
+          new_node = Node(neighbor, current, current.depth + 1)
+          open_queue.put(new_node)
+          open_nodes[new_node.position] = new_node
+    return None
+
   def calc_path(self, start_position, goal_position, next_turn_list):
-    if (not self.environment.passable(goal_position) or
+    if (not self.environment.passable(start_position) or
         not self.environment.passable(goal_position)):
       return None, None, None
     Node = namedtuple('Node', 'position f g h parent depth')
     #logging.error("find_path")
 
     def trace_path(final_node, open_nodes, closed_nodes):
-      t = time()
       path = []
       current = final_node
-      while current.parent is not None:
+      while current.parent:
         path.append(current.position)
         current = current.parent
 
-      # self.tracing_time += time() - t
       return path, open_nodes, closed_nodes
 
     open_nodes = {}
     open_nodes_heap = []
     closed_nodes = {}
-    open_heap = []
 
     start_h = self.manhattan_distance(start_position, goal_position)
     current = Node(start_position, start_h, 0, start_h, None, 0)
@@ -121,8 +165,8 @@ class Search:
         return trace_path(current, open_nodes, closed_nodes)
       closed_nodes[current.position] = current
       for neighbor in self.environment.neighbors[current.position]:
-        if (neighbor not in open_nodes and # and not open
-            neighbor not in closed_nodes and # or closed
+        if (neighbor not in open_nodes and
+            neighbor not in closed_nodes and
             (current.depth > 0 or neighbor not in next_turn_list) and # if occupied and next to start
             self.environment.passable(neighbor)): # if occupied and next to start
           new_g = current.g + 1
@@ -156,5 +200,8 @@ if __name__ == '__main__':
 
   for i in range(20):
     for j in range(20):
-      s.find_path((2,2), (i,j))
+      if e.passable((i,j)):
+        def goal(node):
+          return node == (i,j)
+        s.bfs_path((2,2), goal)
   # print(s.find_path((2, 2), (47, 81), e))
