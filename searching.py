@@ -94,19 +94,19 @@ class Search:
   def path_data(self, start_position, goal_position):
     return self.calc_path(start_position, goal_position, [])
 
+  def trace_path(self, final_node, open_nodes, closed_nodes):
+    path = []
+    current = final_node
+    while current.parent:
+      path.append(current.position)
+      current = current.parent
+
+    return path, open_nodes, closed_nodes
+
   def bfs_path(self, start_position, goal_function, next_turn_list = [], target_list = []):
     if (not self.environment.passable(start_position)):
       return None#, None, None
     Node = namedtuple('Node', 'position parent depth')
-
-    def trace_path(final_node, open_nodes, closed_nodes):
-      path = []
-      current = final_node
-      while current.parent:
-        path.append(current.position)
-        current = current.parent
-
-      return path, open_nodes, closed_nodes
 
     open_queue = deque()
     #TODO: these could probably just be sets this time around
@@ -117,12 +117,12 @@ class Search:
     open_nodes[current.position] = current
     while open_queue:
       current = open_queue.popleft()
-      # if current.depth > 20:
-      #   return trace_path(current, open_nodes, closed_nodes)
+      if current.depth > 30:
+        return self.trace_path(current, open_nodes, closed_nodes)
       del open_nodes[current.position]
       closed_nodes[current.position] = (current)
       if goal_function(current.position):
-        return trace_path(current, open_nodes, closed_nodes)
+        return self.trace_path(current, open_nodes, closed_nodes)
       for neighbor in self.environment.neighbors[current.position]:
         if (neighbor not in open_nodes and
             neighbor not in closed_nodes and
@@ -139,15 +139,6 @@ class Search:
       return None, None, None
     Node = namedtuple('Node', 'position f g h parent depth')
 
-    def trace_path(final_node, open_nodes, closed_nodes):
-      path = []
-      current = final_node
-      while current.parent:
-        path.append(current.position)
-        current = current.parent
-
-      return path, open_nodes, closed_nodes
-
     open_nodes = {}
     open_nodes_heap = []
     closed_nodes = {}
@@ -163,7 +154,7 @@ class Search:
       #current = min(open_nodes.values(), key=lambda x:x.f)
       if current.position == goal_position:
         # logging.error("steps to find path: " + str(current.depth))
-        return trace_path(current, open_nodes, closed_nodes)
+        return self.trace_path(current, open_nodes, closed_nodes)
       closed_nodes[current.position] = current
       for neighbor in self.environment.neighbors[current.position]:
         if (neighbor not in open_nodes and
