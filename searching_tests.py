@@ -54,12 +54,20 @@ class TestFindPath(unittest.TestCase):
     self.assertEqual(len(self.search.find_path((10,10), (11,10))), 1)
 
   def test_further_apart(self):
+    def goal_state(node):
+      return node == (19,19)
     path = self.search.find_path((19,8), (19,19))
     self.assertEqual(len(path), 11)
+    bfs_path, _, _ = self.search.bfs_path((19,8), goal_state)
+    self.assertEqual(len(bfs_path), len(path))
 
   def test_around_things(self):
+    def goal_state(node):
+      return node == (14,19)
     path = self.search.find_path((9,19), (14,19))
+    bfs_path, _, _ = self.search.bfs_path((9,19), goal_state)
     self.assertEqual(len(path), 13)
+    self.assertEqual(len(bfs_path), len(path))
 
 if __name__ == '__main__':
   unittest.main()

@@ -2,7 +2,7 @@ from collections import namedtuple
 from time import time
 import logging
 import heapq
-from queue import Queue
+from collections import deque
 
 class Environment:
   def __init__(self):
@@ -35,7 +35,7 @@ class Environment:
         self.neighbors[(r,c)] = [((r + d_row) % self.rows, (c + d_col) % self.cols)
           for (d_row, d_col) in directions]
 
-# version 0.2.0
+# version 0.2.1
 class Search:
   def __init__(self, env):
     self.environment = env
@@ -67,11 +67,11 @@ class Search:
     # Copy each line individually so we don't screw up grid
     g = [list(line) for line in self.environment.grid]
     for loc in open_list:
-      g[loc[0]][loc[1]] = 'o'
+      g[loc[0]][loc[1]] = '_'
     for loc in closed_list:
-      g[loc[0]][loc[1]] = 'o'
+      g[loc[0]][loc[1]] = '_'
     for loc in path:
-      g[loc[0]][loc[1]] = 'x'
+      g[loc[0]][loc[1]] = 'X'
     for row in g:
       print(*row, sep='')
 
@@ -108,15 +108,17 @@ class Search:
 
       return path, open_nodes, closed_nodes
 
-    open_queue = Queue()
+    open_queue = deque()
     #TODO: these could probably just be sets this time around
     open_nodes = {}
     closed_nodes = {}
     current = Node(start_position, None, 0)
-    open_queue.put(current)
+    open_queue.append(current)
     open_nodes[current.position] = current
     while open_queue:
-      current = open_queue.get()
+      current = open_queue.popleft()
+      # if current.depth > 20:
+      #   return trace_path(current, open_nodes, closed_nodes)
       del open_nodes[current.position]
       closed_nodes[current.position] = (current)
       if goal_function(current.position):
@@ -127,7 +129,7 @@ class Search:
             (current.depth > 0 or neighbor not in next_turn_list) and
             self.environment.passable(neighbor)):
           new_node = Node(neighbor, current, current.depth + 1)
-          open_queue.put(new_node)
+          open_queue.append(new_node)
           open_nodes[new_node.position] = new_node
     return None
 
@@ -136,7 +138,6 @@ class Search:
         not self.environment.passable(goal_position)):
       return None, None, None
     Node = namedtuple('Node', 'position f g h parent depth')
-    #logging.error("find_path")
 
     def trace_path(final_node, open_nodes, closed_nodes):
       path = []
