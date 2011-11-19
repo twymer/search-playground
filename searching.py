@@ -35,7 +35,7 @@ class Environment:
         self.neighbors[(r,c)] = [((r + d_row) % self.rows, (c + d_col) % self.cols)
           for (d_row, d_col) in directions]
 
-# version 0.2.1
+# version 0.2.2
 class Search:
   def __init__(self, env):
     self.environment = env
@@ -105,7 +105,7 @@ class Search:
 
   def bfs_path(self, start_position, goal_function, next_turn_list = [], target_list = []):
     if (not self.environment.passable(start_position)):
-      return None#, None, None
+      return None, None, None
     Node = namedtuple('Node', 'position parent depth')
 
     open_queue = deque()
@@ -131,7 +131,7 @@ class Search:
           new_node = Node(neighbor, current, current.depth + 1)
           open_queue.append(new_node)
           open_nodes[new_node.position] = new_node
-    return None
+    return None, None, None
 
   def calc_path(self, start_position, goal_position, next_turn_list):
     if (not self.environment.passable(start_position) or
