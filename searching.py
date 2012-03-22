@@ -108,22 +108,35 @@ class Search:
       return None, None, None
     Node = namedtuple('Node', 'position parent depth')
 
+
+    # I use both dictionary and queue for large performance boosts
+    # Python's OrderedDict is technically want I need but is FAR slower
+    # than handling it on my own.
+    # We need both features to keep track of the order nodes are insertered
+    # but also a dictionary's constant time lookup based on a nodes position value.
     open_queue = deque()
-    #TODO: these could probably just be sets this time around
     open_nodes = {}
     closed_nodes = {}
+
     current = Node(start_position, None, 0)
     open_queue.append(current)
     open_nodes[current.position] = current
+
     while open_queue:
       current = open_queue.popleft()
+
+      # Abort to prevent very expensive searches
       if current.depth > 30:
         return self.trace_path(current, open_nodes, closed_nodes)
+
       del open_nodes[current.position]
       closed_nodes[current.position] = (current)
+
       if goal_function(current.position):
         return self.trace_path(current, open_nodes, closed_nodes)
+
       for neighbor in self.environment.neighbors[current.position]:
+        # Make sure neighbor is valid and not already used before adding
         if (neighbor not in open_nodes and
             neighbor not in closed_nodes and
             (current.depth > 0 or neighbor not in next_turn_list) and
@@ -133,6 +146,7 @@ class Search:
           open_nodes[new_node.position] = new_node
     return None, None, None
 
+  # Using A* search
   def calc_path(self, start_position, goal_position, next_turn_list):
     if (not self.environment.passable(start_position) or
         not self.environment.passable(goal_position)):
